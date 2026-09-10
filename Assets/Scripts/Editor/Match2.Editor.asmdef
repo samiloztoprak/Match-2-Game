@@ -1,0 +1,18 @@
+{
+    "name": "Match2.Editor",
+    "rootNamespace": "Match2.EditorTools",
+    "references": [
+        "Match2.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

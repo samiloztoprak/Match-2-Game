@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebb69f0a072d6444baf3d558b623c769, type: 3}
+  m_Name: LevelData_01
+  m_EditorClassIdentifier: Match2.Runtime::Match2.Data.LevelData
+  gridWidth: 8
+  gridHeight: 8
+  moveLimit: 20
+  targetScore: 1000
+  palette: {fileID: 11400000, guid: 624e099a70b01314881c22f467bd3086, type: 2}
+  colorCount: 5
