@@ -107,10 +107,17 @@ namespace Match2.Controller
 
         public IReadOnlyList<GridSpawn> PopulateInitialBoard()
         {
-            PlaceInitialBoxes(levelData.InitialBoxCount);
+            IReadOnlyList<int> boxIndices = PlaceInitialBoxes(levelData.InitialBoxCount);
 
-            IReadOnlyList<int> allIndices = gridModel.GetEmptyIndices();
-            return gridModel.Refill(allIndices, CreateRandomPiece);
+            IReadOnlyList<int> emptyIndices = gridModel.GetEmptyIndices();
+            IReadOnlyList<GridSpawn> colorSpawns = gridModel.Refill(emptyIndices, CreateRandomPiece);
+
+            var allSpawns = new List<GridSpawn>(colorSpawns.Count + boxIndices.Count);
+            foreach (int boxIndex in boxIndices)
+                allSpawns.Add(new GridSpawn(boxIndex, gridModel.GetPiece(boxIndex)));
+            allSpawns.AddRange(colorSpawns);
+
+            return allSpawns;
         }
 
         /// <summary>True for a piece the player can tap directly to activate (as opposed to an obstacle like <see cref="BoxPiece"/>, which is also non-matchable but only clears when a power-up effect reaches it).</summary>
@@ -119,11 +126,22 @@ namespace Match2.Controller
             return piece is RocketPiece || piece is BombPiece || piece is BallPiece;
         }
 
-        /// <summary>Scatters <paramref name="count"/> Box obstacles across random empty cells before the rest of the board is dealt color blocks — obstacles only ever exist at level start, nothing spawns a new one mid-level.</summary>
-        private void PlaceInitialBoxes(int count)
+        /// <summary>
+        /// Scatters <paramref name="count"/> Box obstacles across random empty
+        /// cells before the rest of the board is dealt color blocks —
+        /// obstacles only ever exist at level start, nothing spawns a new one
+        /// mid-level. Returns where they landed so the caller can include
+        /// them in the initial spawn list — <see cref="GridModel.Refill"/>
+        /// only reports cells *it* filled, so placing a piece directly via
+        /// <see cref="GridModel.PlacePiece"/> would otherwise never reach the
+        /// View at all (the model would know about the Box, but no
+        /// <see cref="View.BlockView"/> would ever be created for it).
+        /// </summary>
+        private List<int> PlaceInitialBoxes(int count)
         {
+            var placedIndices = new List<int>();
             if (count <= 0)
-                return;
+                return placedIndices;
 
             var availableIndices = new List<int>(gridModel.GetEmptyIndices());
             IGridPiece box = new BoxPiece();
@@ -131,9 +149,13 @@ namespace Match2.Controller
             for (int i = 0; i < count && availableIndices.Count > 0; i++)
             {
                 int pick = UnityEngine.Random.Range(0, availableIndices.Count);
-                gridModel.PlacePiece(availableIndices[pick], box);
+                int index = availableIndices[pick];
+                gridModel.PlacePiece(index, box);
+                placedIndices.Add(index);
                 availableIndices.RemoveAt(pick);
             }
+
+            return placedIndices;
         }
 
         /// <summary>

@@ -212,6 +212,28 @@ namespace Match2.Tests
         }
 
         [Test]
+        public void PopulateInitialBoard_WithBoxes_IncludesThemInTheSpawnList()
+        {
+            // Regression test: PlaceInitialBoxes used to place Box pieces directly in the
+            // model without ever including them in the returned spawn list, so the View
+            // never created a BlockView for them at all — the obstacle was invisible even
+            // though GridView had a perfectly valid box sprite wired up.
+            var levelSo = new SerializedObject(levelData);
+            levelSo.FindProperty("initialBoxCount").intValue = 3;
+            levelSo.ApplyModifiedPropertiesWithoutUndo();
+
+            IReadOnlyList<GridSpawn> spawns = flow.PopulateInitialBoard();
+
+            int boxSpawnCount = 0;
+            foreach (GridSpawn spawn in spawns)
+                if (spawn.Piece is BoxPiece)
+                    boxSpawnCount++;
+
+            Assert.AreEqual(3, boxSpawnCount);
+            Assert.AreEqual(gridModel.CellCount, spawns.Count);
+        }
+
+        [Test]
         public void TryBlastAt_TappedDirectly_DoesNothing()
         {
             gridModel.PlacePiece(12, new BoxPiece());
