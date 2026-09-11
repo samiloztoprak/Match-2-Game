@@ -1,6 +1,7 @@
 using Match2.Controller;
 using Match2.Data;
 using Match2.Model;
+using Match2.Systems;
 using Match2.Systems.Tween;
 using Match2.View;
 using UnityEngine;
@@ -14,7 +15,7 @@ namespace Match2
     /// </summary>
     public class GameBootstrapper : MonoBehaviour
     {
-        [SerializeField] private LevelData levelData;
+        [SerializeField] private LevelSet levelSet;
         [SerializeField] private BlockView blockPrefab;
         [SerializeField] private GridView gridView;
         [SerializeField] private GridInputController inputController;
@@ -24,6 +25,7 @@ namespace Match2
 
         private void Start()
         {
+            LevelData levelData = levelSet.GetLevel(LevelProgress.CurrentLevel);
             var gridModel = new GridModel(levelData.GridWidth, levelData.GridHeight);
             var gameState = new GameStateModel(levelData.MoveLimit, levelData.TargetScore);
             IBlockAnimator animator = new DoTweenBlockAnimator();
