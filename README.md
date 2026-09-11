@@ -52,6 +52,8 @@ Until the step above is done, the player above won't render — [GameVideo.mp4](
   Clusters of 3+ of the same kind still produce the same fixed-size effect as a pair (they don't scale up). If a blast happens to reveal another power-up, that one chain-activates too, even if it was never tapped directly.
 - **Win** by reaching the level's target score before moves run out — a banner flies in, then the game returns to the main menu with the next level unlocked.
 - **Lose** by running out of moves first — the game returns directly to the main menu and you retry the same level.
+- Some levels scatter **Box** obstacles across the board — they block their cell and are never part of a color match. Tapping one directly does nothing; it only breaks when a power-up's blast (including a chained one) reaches it.
+- There are 3 levels with an increasing difficulty curve (bigger board, fewer moves, higher target score); progressing past the last one keeps replaying the hardest.
 
 ## Project Architecture
 
@@ -62,8 +64,8 @@ Assets/Scripts/Runtime/
 ├── Model/        Pure C# — no UnityEngine.MonoBehaviour dependency, fully unit-testable.
 │   GridModel (1D-flattened board, BFS flood-fill, gravity, refill)
 │   GameStateModel (score, moves, win/lose)
-│   IGridPiece implementations: ColorBlockPiece, RocketPiece, BombPiece, BallPiece
-├── Data/         ScriptableObjects: BlockTypeData, BlockPaletteData, LevelData, PowerUpTypeData
+│   IGridPiece implementations: ColorBlockPiece, RocketPiece, BombPiece, BallPiece, BoxPiece
+├── Data/         ScriptableObjects: BlockTypeData, BlockPaletteData, LevelData, LevelSet, PowerUpTypeData
 ├── View/         MonoBehaviours that only render/animate — GridView, BlockView, HudView,
 │                 ScorePopupView, LevelWinView, LevelLoseView, BackgroundFitter, BoardCameraFitter
 ├── Controller/   GameFlowController (all game-rule orchestration), GridInputController, MainMenuController
@@ -73,21 +75,26 @@ Assets/Scripts/Runtime/
 │   ├── Tween     IBlockAnimator seam — DoTweenBlockAnimator (real) / InstantBlockAnimator
 │   │             (synchronous, used by tests) so DOTween is the only tween dependency, isolated
 │   │             to one file
+│   ├── Audio     SfxController — reacts to GameEvents to play procedurally-generated placeholder SFX
 │   └── LevelProgress   PlayerPrefs-backed level counter
 └── GameBootstrapper   Scene-root wiring (plain manual DI, no framework)
 ```
 
 Design notes:
 - The grid is a flattened 1D array (`GridUtility` owns all index↔(x,y) conversion) — chosen for cache-friendliness and simplicity over a 2D array.
-- Power-ups and future obstacles are just another `IGridPiece` implementation; `GridModel`'s core algorithms (flood-fill, gravity, refill) never need to change to add one, since anything non-matchable is automatically excluded from color matching and treated as solid for gravity purposes.
+- Power-ups and obstacles are just another `IGridPiece` implementation (see `BoxPiece`); `GridModel`'s core algorithms (flood-fill, gravity, refill) never need to change to add one, since anything non-matchable is automatically excluded from color matching and treated as solid for gravity purposes.
 - All animation goes through `IBlockAnimator`, so gameplay logic can be tested completely deterministically (`InstantBlockAnimator` resolves every animation synchronously) without needing Play Mode or waiting on real tween timing.
-- The board fits any device aspect ratio at runtime (`BoardCameraFitter`), and colors/difficulty are tunable per level via `LevelData.colorCount` against a single shared `BlockPaletteData` — no per-level art duplication needed.
+- The board fits any device aspect ratio at runtime (`BoardCameraFitter`), and colors/difficulty/obstacle count are tunable per level via `LevelData` against a single shared `BlockPaletteData` — no per-level art duplication needed. `LevelSet` orders the levels the game progresses through.
 
 See `CLAUDE.md` for a much more detailed, code-reference-level architecture breakdown (originally written as working notes, kept for anyone extending the project).
 
 ## Testing
 
-21 EditMode unit tests cover the core grid rules (flood-fill matching, gravity, refill, power-up area/line/cross queries, group-size computation) in `Assets/Scripts/Tests/EditMode/`. Run them via **Window → General → Test Runner → EditMode → Run All** in the Unity Editor, or headless:
+35 EditMode unit tests in `Assets/Scripts/Tests/EditMode/`:
+- `GridModelTests`/`GridUtilityTests` (21) cover the core grid rules — flood-fill matching, gravity, refill, power-up area/line/cross queries, group-size computation.
+- `GameFlowControllerTests` (14) drive the full turn pipeline end to end with a real `GridView` and the deterministic `InstantBlockAnimator` — match scoring, every power-up creation threshold, every 2-piece combo, same-kind cluster sizing, multi-hop chain reactions, the Box obstacle, and win/lose events.
+
+Run them via **Window → General → Test Runner → EditMode → Run All** in the Unity Editor, or headless:
 
 ```
 Unity.exe -batchmode -projectPath <path> -runTests -testPlatform EditMode -testResults results.xml -quit
@@ -97,9 +104,8 @@ Unity.exe -batchmode -projectPath <path> -runTests -testPlatform EditMode -testR
 
 This is a time-boxed case study; the following were deliberately left out rather than rushed:
 
-- **Obstacles** (crates, balloons, etc.) — the `IGridPiece` seam is already designed to support them without touching `GridModel`, but none are implemented yet.
-- **Multiple levels with a real difficulty curve** — only one `LevelData` asset exists today (`LevelData_01`). `LevelProgress` already tracks and advances a level counter; wiring it to select a different `LevelData` per level is the natural next step.
-- **Audio** — no SFX or music yet.
+- **More obstacle variety** (e.g. a multi-hit crate, a balloon that floats) — only a single-hit Box exists so far; the `IGridPiece` seam already supports adding more the same way.
+- **Real audio** — the current SFX are procedurally synthesized placeholder tones (see `AudioClipGenerator`), not sourced/composed audio, and there's no music.
 - **Settings/pause menu**, leaderboards, or any backend/analytics integration.
 
 ## Platform
