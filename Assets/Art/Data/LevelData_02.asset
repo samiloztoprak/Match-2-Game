@@ -18,3 +18,4 @@ MonoBehaviour:
   targetScore: 1400
   palette: {fileID: 11400000, guid: 624e099a70b01314881c22f467bd3086, type: 2}
   colorCount: 5
+  initialBoxCount: 4

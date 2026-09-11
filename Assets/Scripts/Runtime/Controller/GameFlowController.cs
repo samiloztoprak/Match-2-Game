@@ -67,6 +67,9 @@ namespace Match2.Controller
             IGridPiece tappedPiece = gridModel.GetPiece(index);
             if (tappedPiece != null && !tappedPiece.IsMatchable)
             {
+                if (!IsPowerUp(tappedPiece))
+                    return; // an obstacle (e.g. Box) - tapping it directly does nothing, only a power-up effect reaching it clears it
+
                 isTurnInProgress = true;
                 ActivatePowerUp(index);
                 return;
@@ -104,8 +107,33 @@ namespace Match2.Controller
 
         public IReadOnlyList<GridSpawn> PopulateInitialBoard()
         {
+            PlaceInitialBoxes(levelData.InitialBoxCount);
+
             IReadOnlyList<int> allIndices = gridModel.GetEmptyIndices();
             return gridModel.Refill(allIndices, CreateRandomPiece);
+        }
+
+        /// <summary>True for a piece the player can tap directly to activate (as opposed to an obstacle like <see cref="BoxPiece"/>, which is also non-matchable but only clears when a power-up effect reaches it).</summary>
+        private static bool IsPowerUp(IGridPiece piece)
+        {
+            return piece is RocketPiece || piece is BombPiece || piece is BallPiece;
+        }
+
+        /// <summary>Scatters <paramref name="count"/> Box obstacles across random empty cells before the rest of the board is dealt color blocks — obstacles only ever exist at level start, nothing spawns a new one mid-level.</summary>
+        private void PlaceInitialBoxes(int count)
+        {
+            if (count <= 0)
+                return;
+
+            var availableIndices = new List<int>(gridModel.GetEmptyIndices());
+            IGridPiece box = new BoxPiece();
+
+            for (int i = 0; i < count && availableIndices.Count > 0; i++)
+            {
+                int pick = UnityEngine.Random.Range(0, availableIndices.Count);
+                gridModel.PlacePiece(availableIndices[pick], box);
+                availableIndices.RemoveAt(pick);
+            }
         }
 
         /// <summary>

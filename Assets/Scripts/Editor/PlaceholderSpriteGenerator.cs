@@ -130,6 +130,78 @@ namespace Match2.EditorTools
             Debug.Log($"PlaceholderSpriteGenerator: generated {pngPath}");
         }
 
+        [MenuItem("Match2/Generate Box Placeholder Sprite")]
+        public static void GenerateBoxSprite()
+        {
+            Directory.CreateDirectory(OutputFolder);
+
+            const int size = 128;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float nx = x / (float)size;
+                    float ny = y / (float)size;
+                    texture.SetPixel(x, y, ClassifyBoxPixel(nx, ny));
+                }
+            }
+
+            texture.Apply();
+
+            string pngPath = $"{OutputFolder}/BoxPlaceholder.png";
+            File.WriteAllBytes(pngPath, texture.EncodeToPNG());
+            Object.DestroyImmediate(texture);
+
+            AssetDatabase.ImportAsset(pngPath);
+            var importer = (TextureImporter)AssetImporter.GetAtPath(pngPath);
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = size;
+            importer.alphaIsTransparency = true;
+            importer.mipmapEnabled = false;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.SaveAndReimport();
+
+            Debug.Log($"PlaceholderSpriteGenerator: generated {pngPath}");
+        }
+
+        /// <summary>A wooden crate: a bordered brown square with a plank cross and corner rivets, read instantly as "obstacle" against the round/soft power-up icons.</summary>
+        private static Color ClassifyBoxPixel(float nx, float ny)
+        {
+            var outline = new Color(0.30f, 0.18f, 0.08f);
+            var body = new Color(0.58f, 0.38f, 0.20f);
+            var plank = new Color(0.44f, 0.28f, 0.13f);
+            var rivet = new Color(0.82f, 0.66f, 0.42f);
+            var clear = new Color(0f, 0f, 0f, 0f);
+
+            const float margin = 0.08f;
+            bool inSquare = nx >= margin && nx <= 1f - margin && ny >= margin && ny <= 1f - margin;
+            if (!inSquare)
+                return clear;
+
+            const float borderWidth = 0.05f;
+            bool inBorder = nx <= margin + borderWidth || nx >= 1f - margin - borderWidth
+                || ny <= margin + borderWidth || ny >= 1f - margin - borderWidth;
+
+            bool onDiagonal1 = Mathf.Abs((nx - margin) - (ny - margin)) <= 0.045f;
+            bool onDiagonal2 = Mathf.Abs((nx - margin) - (1f - margin - ny)) <= 0.045f;
+
+            var rivetCenters = new[] { new Vector2(0.2f, 0.2f), new Vector2(0.8f, 0.2f), new Vector2(0.2f, 0.8f), new Vector2(0.8f, 0.8f) };
+            foreach (Vector2 center in rivetCenters)
+            {
+                if (Vector2.Distance(new Vector2(nx, ny), center) <= 0.05f)
+                    return rivet;
+            }
+
+            if (inBorder)
+                return outline;
+            if (onDiagonal1 || onDiagonal2)
+                return plank;
+
+            return body;
+        }
+
         /// <summary>
         /// A neutral-grey shiny orb, deliberately left uncolored — <c>GridView</c>
         /// tints it to the Ball's target color at runtime via <c>SpriteRenderer.color</c>,

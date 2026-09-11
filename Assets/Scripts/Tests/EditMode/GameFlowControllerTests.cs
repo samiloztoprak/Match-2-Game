@@ -212,6 +212,36 @@ namespace Match2.Tests
         }
 
         [Test]
+        public void TryBlastAt_TappedDirectly_DoesNothing()
+        {
+            gridModel.PlacePiece(12, new BoxPiece());
+            FillRemainingWithColor(1);
+            ShowBoard();
+
+            int scoreBefore = gameState.Score;
+            int movesBefore = gameState.MovesLeft;
+
+            flow.TryBlastAt(12);
+
+            Assert.AreEqual(scoreBefore, gameState.Score);
+            Assert.AreEqual(movesBefore, gameState.MovesLeft);
+            Assert.IsInstanceOf<BoxPiece>(gridModel.GetPiece(12));
+        }
+
+        [Test]
+        public void TryBlastAt_BoxCaughtInPowerUpArea_IsCleared()
+        {
+            gridModel.PlacePiece(12, new BombPiece());
+            gridModel.PlacePiece(13, new BoxPiece()); // inside the Bomb's 3x3 area
+            FillRemainingWithColor(1);
+            ShowBoard();
+
+            flow.TryBlastAt(12);
+
+            Assert.IsFalse(gridModel.GetPiece(13) is BoxPiece);
+        }
+
+        [Test]
         public void TryBlastAt_ChainReaction_CascadesThroughMultipleUntappedPowerUps()
         {
             // Two bombs blast a 5x5 area that happens to contain a rocket; that rocket's

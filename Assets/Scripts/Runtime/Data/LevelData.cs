@@ -20,11 +20,14 @@ namespace Match2.Data
         [SerializeField] private BlockPaletteData palette;
         [SerializeField, Min(2), Tooltip("How many colors from the palette are in play this level, starting from the first entry.")]
         private int colorCount = 5;
+        [SerializeField, Min(0), Tooltip("How many Box obstacles are scattered across the board at level start. 0 = no obstacles.")]
+        private int initialBoxCount;
 
         public int GridWidth => gridWidth;
         public int GridHeight => gridHeight;
         public int MoveLimit => moveLimit;
         public int TargetScore => targetScore;
+        public int InitialBoxCount => initialBoxCount;
 
         public IReadOnlyList<BlockTypeData> BlockTypes
         {

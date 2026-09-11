@@ -1538,6 +1538,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: eb67240a42696fe46bd96eb910233eb0, type: 2}
   - {fileID: 11400000, guid: 10c69e1b038554644983f05b816e94f8, type: 2}
   - {fileID: 11400000, guid: 3c2611fcd338467478318bb90fb434d0, type: 2}
+  boxSprite: {fileID: 21300000, guid: e513af2579e457c4ab5286365f9094a2, type: 3}
   scorePopupPrefab: {fileID: 6406165744479090219, guid: 6ca098846763bd144982cc34d5554461, type: 3}
   scorePopupTarget: {fileID: 819903659}
   worldCamera: {fileID: 1852215497}
@@ -3585,6 +3586,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Match2.Runtime::Match2.View.GridView
   cellSize: 1
   powerUpTypes: []
+  boxSprite: {fileID: 0}
   scorePopupPrefab: {fileID: 0}
   scorePopupTarget: {fileID: 0}
   worldCamera: {fileID: 0}
@@ -4377,6 +4379,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Match2.Runtime::Match2.View.GridView
   cellSize: 1
   powerUpTypes: []
+  boxSprite: {fileID: 0}
   scorePopupPrefab: {fileID: 0}
   scorePopupTarget: {fileID: 0}
   worldCamera: {fileID: 0}

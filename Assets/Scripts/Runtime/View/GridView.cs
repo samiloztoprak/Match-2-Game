@@ -21,6 +21,7 @@ namespace Match2.View
 
         [SerializeField] private float cellSize = 1f;
         [SerializeField] private List<PowerUpTypeData> powerUpTypes = new();
+        [SerializeField] private Sprite boxSprite;
         [SerializeField] private ScorePopupView scorePopupPrefab;
         [SerializeField] private RectTransform scorePopupTarget;
         [SerializeField] private Camera worldCamera;
@@ -352,6 +353,9 @@ namespace Match2.View
                 case BallPiece ball when powerUpTypesByKind.TryGetValue(PowerUpKind.Ball, out PowerUpTypeData ballType):
                     Color tint = blockTypesByColorId.TryGetValue(ball.TargetColorId, out BlockTypeData targetType) ? targetType.TintColor : Color.white;
                     return (ballType.Sprite, 0f, tint);
+
+                case BoxPiece:
+                    return (boxSprite, 0f, Color.white);
 
                 default:
                     return (null, 0f, Color.white);
